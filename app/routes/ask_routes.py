@@ -17,7 +17,7 @@ class AskRequest(BaseModel):
 
 router = APIRouter()
 
-model="llama-3.3-70b-versatile"
+model="openai/gpt-oss-20b"
 system_prompt = """
     Eres un asistente útil que responde preguntas basándose en el contexto proporcionado.
     Sé amigable, claro y conciso.
@@ -40,9 +40,9 @@ async def ask(request: AskRequest):
             temperature=0.1
         )
 
-        print("---------- response ----------")
+        # print("---------- response ----------")
         answer = response.choices[0].message.content
-        print(answer)
+        # print(answer)
         return answer
     except Exception as e:
         print(f"Error: {e}")

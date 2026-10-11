@@ -1,6 +1,6 @@
 # FastAPI Chatbot
 
-Un chatbot simple construido con FastAPI y Groq API que responde preguntas utilizando el modelo Llama 3.3 70B.
+Un chatbot simple construido con FastAPI y Groq API que responde preguntas utilizando el modelo GPT-OSS 20B.
 
 ## Características
 
@@ -92,5 +92,5 @@ fastapi_chatbot/
 ## Notas
 
 - El origen CORS está configurado para `http://127.0.0.1:61039` - ajustar según sea necesario
-- El modelo utilizado es `llama-3.3-70b-versatile`
+- El modelo utilizado es `openai/gpt-oss-20b`
 - La temperatura está configurada en 0.1 para respuestas más consistentes
