@@ -3,7 +3,8 @@ from app.routes import ask_routes
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+# El header Origin nunca termina en "/", así que se normaliza para que "https://x.app/" también matchee
+allowed_origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
 app = FastAPI()    
 app.add_middleware(
