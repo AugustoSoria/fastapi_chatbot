@@ -53,7 +53,10 @@ def client_ip(request: Request) -> str:
         ip = get_remote_address(request)
 
     if _LOG_CLIENT_IP:
-        logger.info("client_ip: xff=%r hops=%d -> %s", xff, TRUSTED_PROXY_HOPS, ip)
+        # WARNING a propósito: la app no configura logging y los INFO se filtran,
+        # así que esta línea de diagnóstico no aparecería en Render. Solo corre
+        # cuando se enciende LOG_CLIENT_IP a mano; apagalo cuando termines.
+        logger.warning("client_ip: xff=%r hops=%d -> %s", xff, TRUSTED_PROXY_HOPS, ip)
     return ip
 
 
