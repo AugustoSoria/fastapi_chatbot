@@ -4,6 +4,11 @@ import os
 # Se define una falsa antes de cualquier import de la app; los tests nunca llaman a Groq.
 os.environ.setdefault("API_KEY", "test-key")
 
+# El TestClient manda todo desde una sola IP ("testclient"), así que el límite por
+# IP se agotaría a mitad de la suite. Se desactiva en tests; su lógica (client_ip)
+# se prueba aparte en test_rate_limit.py.
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
 import pytest
 from fastapi.testclient import TestClient
 

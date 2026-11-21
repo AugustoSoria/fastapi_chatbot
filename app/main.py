@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 from app.routes import ask_routes
+from app.rate_limit import limiter, rate_limit_handler
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 import os
 
 # El header Origin nunca termina en "/", así que se normaliza para que "https://x.app/" también matchee
 allowed_origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
-app = FastAPI()    
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,

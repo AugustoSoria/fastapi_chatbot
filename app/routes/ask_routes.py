@@ -3,11 +3,12 @@ import os
 from typing import Literal, Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from groq import Groq
 from pydantic import BaseModel, Field
 
+from app.rate_limit import limiter
 from app.tutor import (
     LOCKED_REPLY,
     Accion,
@@ -46,24 +47,29 @@ class AskResponse(BaseModel):
 router = APIRouter()
 
 
+# Límite por IP: 15/min corta ráfagas de un bot sin molestar a un humano (que
+# raramente pasa de 5-8 mensajes/min escribiendo), y 150/hora frena el abuso
+# lento. La IP real se resuelve en app/rate_limit.py (X-Forwarded-For de Render).
 @router.post("/", response_model=AskResponse)
-async def ask(request: AskRequest):
-    if not request.historial:
+@limiter.limit("15/minute")
+@limiter.limit("150/hour")
+async def ask(request: Request, payload: AskRequest):
+    if not payload.historial:
         return AskResponse(reply="¿En qué puedo ayudarte?")
 
     # Las acciones que necesitan el texto del clip no llegan al modelo si está bloqueado
-    if request.accion and is_locked(request.context):
+    if payload.accion and is_locked(payload.context):
         return AskResponse(reply=LOCKED_REPLY)
 
-    system_prompt = build_system_prompt(request.context, request.accion)
-    history = [m.model_dump() for m in request.historial[-MAX_HISTORY:]]
+    system_prompt = build_system_prompt(payload.context, payload.accion)
+    history = [m.model_dump() for m in payload.historial[-MAX_HISTORY:]]
 
-    if request.accion != "pista":
+    if payload.accion != "pista":
         return AskResponse(reply=await complete(system_prompt, history))
 
     # Pista: si el modelo revela palabras que el usuario no acertó, se reintenta una vez
     # prohibiéndolas explícitamente, y si vuelve a pasar se usa una pista armada sin LLM.
-    ctx = request.context
+    ctx = payload.context
     hidden = spoiler_words(ctx.original, ctx.attempt or "")
     answer = await complete(system_prompt, history)
     if leaks(answer, hidden):
